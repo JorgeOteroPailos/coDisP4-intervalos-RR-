@@ -1,13 +1,14 @@
-package Cliente;
-
-import static movidasDeMensajes.RabbitMQ.*;
+package P4ComDis.Cliente;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-import java.util.Random;
 import java.util.UUID;
+
+import static P4ComDis.utils.Outros.debugPrint;
+import static P4ComDis.utils.RabbitMQ.enviar;
+import static P4ComDis.utils.RabbitMQ.recibirBloqueante;
 
 public class Cliente{
     private Channel canle;
@@ -15,20 +16,30 @@ public class Cliente{
     private final Controlador controlador;
     private final String nomeColaSuscripcions;
 
+    private FioCliente fio;
+
     public Cliente(Controlador controlador, String nomeColaSuscripcions, String IPservidor){
         id=xerarID();
         this.controlador=controlador;
         this.nomeColaSuscripcions=nomeColaSuscripcions;
         try{
-                ConnectionFactory factory = new ConnectionFactory();
-                factory.setHost(IPservidor);
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost(IPservidor);
 
-                try (Connection conexion = factory.newConnection()) {
-                    canle = conexion.createChannel();
-                }
+            Connection conexion = factory.newConnection();
+            canle = conexion.createChannel();
+            modificarTempoSuscripcion(controlador.getTempoSuscripcion());
+
         } catch (Exception e) {
             System.err.println("Erro na inicialización do servidor: " + e.getMessage());
         }
+        run();
+    }
+
+    public void rematar(){
+        if(fio!=null){
+            fio.sigho=false;
+        }modificarTempoSuscripcion(0);
     }
 
     public void modificarTempoSuscripcion(int tempo){
@@ -40,28 +51,31 @@ public class Cliente{
         }
     }
 
+    public void run(){
+        fio=new FioCliente(this);
+        new Thread(fio).start();
+    }
+
     public static String xerarID() {
         return UUID.randomUUID().toString();
     }
 
-    private class FioCliente implements Runnable{
+    private static class FioCliente implements Runnable{
         public boolean sigho=true;
-        private Channel canle;
-        private final String id;
-        private final Controlador controlador;
 
-        private FioCliente(Channel canle, String id, Controlador controlador) {
-            this.canle = canle;
-            this.id = id;
-            this.controlador = controlador;
+        private final Cliente cliente;
+
+        private FioCliente(Cliente cliente) {
+            this.cliente=cliente;
         }
 
         @Override
         public void run() {
             while(sigho){
                 try {
-                    float dato= Float.parseFloat(recibirBloqueante(canle,id));
-                    //TODO Controlador.mostrarDato(dato);
+                    float dato= Float.parseFloat(recibirBloqueante(cliente.canle,"cliente_"+cliente.id));
+                    cliente.controlador.recibirDato(dato);
+                    debugPrint("Recibí el dato "+dato);
                 } catch (Exception e) {
                     System.err.println("Erro na recepción dos datos: "+e.getMessage());
                     throw new RuntimeException(e);
