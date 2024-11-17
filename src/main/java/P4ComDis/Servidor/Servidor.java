@@ -107,7 +107,7 @@ public class Servidor implements Runnable {
 
         String arquivo = args[0];
         String IP = args[1];
-        String nombreColaSuscripciones = args[2];
+        String nombreColaSuscripciones = "colaSuscripcions";
 
         Servidor servidor = new Servidor(arquivo, IP, nombreColaSuscripciones);
         new Thread(servidor).start();
