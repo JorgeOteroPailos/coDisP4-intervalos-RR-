@@ -24,9 +24,9 @@ public class Controlador extends Application {
     private NumberAxis xAxis;
     private int timeCounter = 0;
 
-    private Cliente cliente; // Objeto del cliente para interactuar con el servidor
-    private String serverName = "localhost"; // Nombre del servidor por defecto
-    private int subscriptionTime = 30; // Tiempo de suscripción inicial por defecto
+    private Cliente cliente; // Obxecto do cliente para interactuar co servidor
+    private String serverName = "localhost"; // Nome do servidor por defecto
+    private int subscriptionTime = 30; // Tempo de suscripción inicial por defecto
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Override
@@ -45,7 +45,7 @@ public class Controlador extends Application {
         series.setName("Valores");
         lineChart.getData().add(series);
 
-        // Crear controles
+        // Crear controis
         HBox controls = gethBox();
 
         // Layout principal
@@ -53,16 +53,16 @@ public class Controlador extends Application {
         root.setTop(controls);
         root.setCenter(lineChart);
 
-        // Configurar escena
+        // Configurar escea
         Scene scene = new Scene(root, 800, 600);
         stage.setScene(scene);
         stage.setTitle("P4ComDis.Cliente con Gráfico");
         stage.setOnCloseRequest(event -> {
             if (cliente != null) {
-                cliente.rematar(); // Detener las operaciones del cliente
+                cliente.rematar(); // Deter as operaciones do cliente
             }
-            executorService.shutdown(); // Apagar el ejecutor
-            System.exit(0); // Terminar el programa
+            executorService.shutdown(); // Apagar o executor
+            System.exit(0); // Terminar o programa
         });
         stage.show();
     }
@@ -72,11 +72,11 @@ public class Controlador extends Application {
         serverField.setPromptText("Servidor");
         Button connectButton = new Button("Conectar");
 
-        TextField subscriptionTimeField = new TextField(String.valueOf(subscriptionTime)); // Usar la variable subscriptionTime
-        subscriptionTimeField.setPromptText("Tiempo de suscripción (s)");
+        TextField subscriptionTimeField = new TextField(String.valueOf(subscriptionTime)); // Usar a variable subscriptionTime
+        subscriptionTimeField.setPromptText("Tempo de suscripción (s)");
         Button renewButton = new Button("Renovar Suscripción");
 
-        // Comportamiento del botón "Conectar"
+        // Comportamento do botón "Conectar"
         connectButton.setOnAction(e -> {
             serverName = serverField.getText();
             if (cliente != null) {
@@ -92,7 +92,7 @@ public class Controlador extends Application {
             }
         });
 
-        // Comportamiento del botón "Renovar Suscripción"
+        // Comportamentol do botón "Renovar Suscripción"
         renewButton.setOnAction(e -> {
             if (cliente != null) {
                 try {
@@ -101,16 +101,16 @@ public class Controlador extends Application {
                     cliente.modificarTempoSuscripcion(subscriptionTime); // Renovar suscripción
                     debugPrint("Suscripción renovada por " + subscriptionTime + " segundos.");
                 } catch (NumberFormatException ex) {
-                    Popup.show("Error", "Debe ingresar un tiempo válido (número entero positivo)", Alert.AlertType.ERROR);
+                    Popup.show("Error", "Debe ingresar un tempo válido (número entero positivo)", Alert.AlertType.ERROR);
                 }
             } else {
-                Popup.show("Error", "Primero debe conectarse al servidor", Alert.AlertType.ERROR);
+                Popup.show("Error", "Primero debe conectarse ao servidor", Alert.AlertType.ERROR);
             }
         });
 
-        // Layout para controles
+        // Layout para controis
         HBox controls = new HBox(10, new Label("Servidor:"), serverField, connectButton,
-                new Label("Tiempo (s):"), subscriptionTimeField, renewButton);
+                new Label("Tempo (s):"), subscriptionTimeField, renewButton);
         controls.setPadding(new Insets(10));
         return controls;
     }
@@ -120,7 +120,7 @@ public class Controlador extends Application {
             try {
                 javafx.application.Platform.runLater(() -> {
                     series.getData().add(new XYChart.Data<>(timeCounter++, dato));
-                    // Ajustar eje X para mostrar últimos 60 segundos
+                    // Axustar eixo X para mostrar últimos 60 segundos
                     if (timeCounter > 60) {
                         xAxis.setLowerBound(timeCounter - 60);
                         xAxis.setUpperBound(timeCounter);
@@ -132,7 +132,7 @@ public class Controlador extends Application {
         });
     }
 
-    // Nuevo método para obtener el tiempo de suscripción
+    // Nuevo método para obter o tempo de suscripción
     public int getTempoSuscripcion() {
         return subscriptionTime;
     }

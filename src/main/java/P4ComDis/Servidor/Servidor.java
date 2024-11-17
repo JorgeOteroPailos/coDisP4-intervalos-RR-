@@ -38,7 +38,7 @@ public class Servidor implements Runnable {
 
             canle.queueDeclare(nomeColaSuscripcions, false, false, false, null);
 
-            scheduler = Executors.newScheduledThreadPool(1); // Inicializamos el programador
+            scheduler = Executors.newScheduledThreadPool(1); // Inicializamos o programador
 
         } catch (Exception e) {
             System.err.println("Erro na inicialización do servidor: " + e.getMessage());
@@ -55,7 +55,7 @@ public class Servidor implements Runnable {
                 String clienteID = entry.getKey();
                 Integer tempoRestante = entry.getValue();
 
-                // Reducir el tiempo restante y comprobar si eliminarlo
+                // Reducir o tempo restante e comprobar se eliminalo
                 tempoRestante--;
                 clientes.replace(clienteID, tempoRestante);
                 if (tempoRestante < 0) {
@@ -80,17 +80,17 @@ public class Servidor implements Runnable {
             try {
                 dato = RabbitMQ.recibir(canle, nomeColaSuscripcions);
                 while (dato != null) {
-                    debugPrint("Recibido mensaje de suscripción");
+                    debugPrint("Recibida mensaxe de suscripción");
                     String[] aux = dato.split(" ");
                     canle.queueDeclare("cliente_" + aux[0], false, false, false, null);
                     clientes.put(aux[0], Integer.parseInt(aux[1]));
-                    debugPrint("Suscripción aceptada, hay " + clientes.size() + " clientes");
+                    debugPrint("Suscripción aceptada, hai " + clientes.size() + " clientes");
                     dato = RabbitMQ.recibir(canle, nomeColaSuscripcions);
                 }
             }catch(IOException e) {
                 System.err.println("Erro na recepción de mensaxes: " + e.getMessage());
             }
-        }, 0, 1, TimeUnit.SECONDS); // Ejecuta cada segundo
+        }, 0, 1, TimeUnit.SECONDS); // Executa cada segundo
     }
 
     private String leerDato() {
