@@ -75,36 +75,12 @@ public class Controlador extends Application {
         Button renewButton = new Button("Renovar Suscripción");
 
         // Comportamento do botón "Conectar"
-        connectButton.setOnAction(e -> {
-            serverName = serverField.getText();
-            if (cliente != null) {
-                cliente.rematar();
-            }
-            cliente = new Cliente(this, "colaSuscripcions", serverName); // Conectarse ao servidor
-            try {
-                subscriptionTime = Integer.parseInt(subscriptionTimeField.getText()); // Gardar o tempo ingresado
-                if (subscriptionTime <= 0) throw new NumberFormatException(); // Validar número positivo
-                cliente.modificarTempoSuscripcion(subscriptionTime); // Renovar suscripción
-            } catch (NumberFormatException ex) {
-                Popup.show("Erro", "Debe ingresar un tempo válido (número enteiro positivo)", Alert.AlertType.ERROR);
-            }
-        });
+        connectButton.setOnAction(e -> renovarOiniciarConexion(serverField,subscriptionTimeField));
 
         // Comportamento do botón "Renovar Suscripción"
-        renewButton.setOnAction(e -> {
-            if (cliente != null) {
-                try {
-                    subscriptionTime = Integer.parseInt(subscriptionTimeField.getText()); // Actualizar a variable subscriptionTime
-                    if (subscriptionTime <= 0) throw new NumberFormatException(); // Validar número positivo
-                    cliente.modificarTempoSuscripcion(subscriptionTime); // Renovar suscripción
-                    System.out.println("Suscripción renovada por " + subscriptionTime + " segundos.");
-                } catch (NumberFormatException ex) {
-                    Popup.show("Erro", "Debe ingresar un tiempo válido (número enteiro positivo)", Alert.AlertType.ERROR);
-                }
-            } else {
-                Popup.show("Erro", "Primeiro debe conectarse ao servidor", Alert.AlertType.ERROR);
-            }
-        });
+        renewButton.setOnAction(e -> renovarOiniciarConexion(serverField,subscriptionTimeField));
+
+
 
         // Layout para controis
         HBox controls = new HBox(10, new Label("Servidor:"), serverField, connectButton,
@@ -128,6 +104,21 @@ public class Controlador extends Application {
                 System.err.println("Erro ao recibir datos: " + e.getMessage());
             }
         });
+    }
+
+    private void renovarOiniciarConexion(TextField serverField, TextField subscriptionTimeField){
+        serverName = serverField.getText();
+        if (cliente != null) {
+            cliente.rematar();
+        }
+        cliente = new Cliente(this, "colaSuscripcions", serverName); // Conectarse ao servidor
+        try {
+            subscriptionTime = Integer.parseInt(subscriptionTimeField.getText()); // Gardar o tempo ingresado
+            if (subscriptionTime < 0) throw new NumberFormatException(); // Validar número positivo
+            cliente.modificarTempoSuscripcion(); // Renovar suscripción
+        } catch (NumberFormatException ex) {
+            Popup.show("Erro", "Debe ingresar un tempo válido (número enteiro positivo)", Alert.AlertType.ERROR);
+        }
     }
 
     // Novo método para obter o tempo de suscripción

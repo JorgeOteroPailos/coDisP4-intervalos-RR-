@@ -32,6 +32,7 @@ public class Cliente{
 
         } catch (Exception e) {
             System.err.println("Erro na inicialización do servidor: " + e.getMessage());
+            return;
         }
         run();
     }
@@ -43,13 +44,17 @@ public class Cliente{
         modificarTempoSuscripcion(0);
     }
 
-    public void modificarTempoSuscripcion(int tempo){
+    private void modificarTempoSuscripcion(int tempo){
         String mensaxe=id+" "+ tempo;
         try {
             enviar(canle, nomeColaSuscripcions, mensaxe);
         }catch (Exception e){
             System.err.println("Erro na renovación do tempo de suscripción: "+e.getMessage());
         }
+    }
+
+    public void modificarTempoSuscripcion(){
+        modificarTempoSuscripcion(controlador.getTempoSuscripcion());
     }
 
     public void run(){
@@ -76,7 +81,7 @@ public class Cliente{
                 try {
                     float dato= Float.parseFloat(recibirBloqueante(cliente.canle,"cliente_"+cliente.id));
                     cliente.controlador.recibirDato(dato);
-                    debugPrint("Recibí el dato "+dato);
+                    debugPrint("Recibín o dato "+dato);
                 } catch (Exception e) {
                     System.err.println("Erro na recepción dos datos: "+e.getMessage());
                     throw new RuntimeException(e);
