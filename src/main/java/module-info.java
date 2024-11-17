@@ -4,6 +4,7 @@ module P4ComDis.main {
     requires javafx.controls;
     requires javafx.fxml;
     requires com.rabbitmq.client;
+    requires java.management;
 
     // Exporta los paquetes necesarios
     exports P4ComDis.Cliente;

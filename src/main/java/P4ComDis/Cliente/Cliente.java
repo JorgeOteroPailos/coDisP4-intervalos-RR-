@@ -4,7 +4,10 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-import java.util.UUID;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+import java.util.Random;
 
 import static P4ComDis.utils.Outros.debugPrint;
 import static P4ComDis.utils.RabbitMQ.enviar;
@@ -63,7 +66,43 @@ public class Cliente{
     }
 
     public static String xerarID() {
-        return UUID.randomUUID().toString();
+        String macAddress = getMacAddress();
+        long timestamp = System.currentTimeMillis();
+        int pid = getProcessID();
+        int randomValue = new Random().nextInt(1_000_000); // Número aleatorio entre 0 y 999999
+
+        // Combina os componentes nun só identificador
+        return String.format("%s-%d-%d-%06d", macAddress, timestamp, pid, randomValue);
+    }
+
+    private static String getMacAddress() {
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface ni = interfaces.nextElement();
+                if (ni != null && ni.getHardwareAddress() != null && ni.isUp()) {
+                    byte[] mac = ni.getHardwareAddress();
+                    StringBuilder sb = new StringBuilder();
+                    for (byte b : mac) {
+                        sb.append(String.format("%02X", b)); // Convirte cada byte nun formato hexadecimal
+                    }
+                    return sb.toString();
+                }
+            }
+        }catch (SocketException e) {
+            System.err.println("Erro na obtención da dirección mac, xerando ID con dirección mac por defecto.");
+        }
+        return "UNKNOWN_MAC";
+    }
+
+    private static int getProcessID() {
+        String processName = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+        // O formato típico de `getName()` é "PID@hostname"
+        try {
+            return Integer.parseInt(processName.split("@")[0]);
+        } catch (NumberFormatException e) {
+            return new Random().nextInt(1_000); // Se non se pode obter o PID, usa un número aleatorio
+        }
     }
 
     private static class FioCliente implements Runnable{
