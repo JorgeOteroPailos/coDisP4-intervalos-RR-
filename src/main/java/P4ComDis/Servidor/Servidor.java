@@ -16,8 +16,6 @@ import static P4ComDis.utils.Outros.debugPrint;
 
 public class Servidor implements Runnable {
     private Channel canle;
-
-    private Integer TODO =0;
     private BufferedReader lectorArquivo;
     private HashMap<String, Integer> clientes;
     private String nomeColaSuscripcions;
@@ -35,6 +33,9 @@ public class Servidor implements Runnable {
 
             Connection conexion = factory.newConnection();
             canle = conexion.createChannel();
+
+            canle.queueDelete(nomeColaSuscripcions);
+
             canle.queueDeclare(nomeColaSuscripcions, false, false, false, null);
 
             scheduler = Executors.newScheduledThreadPool(1); // Inicializamos el programador
@@ -47,7 +48,7 @@ public class Servidor implements Runnable {
     @Override
     public void run() {
         scheduler.scheduleAtFixedRate(() -> {
-            String dato = leerDato();
+            String dato=leerDato();
             Iterator<Map.Entry<String, Integer>> iterator = clientes.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<String, Integer> entry = iterator.next();
@@ -68,8 +69,6 @@ public class Servidor implements Runnable {
                     continue;
                 }
                 try {
-                    dato=String.valueOf(Float.parseFloat(dato)+TODO);
-                    TODO++;
                     RabbitMQ.enviar(canle, "cliente_" + clienteID, dato);
                     debugPrint("Envío "+dato+" a "+clienteID);
                 } catch (Exception e) {
@@ -81,15 +80,15 @@ public class Servidor implements Runnable {
             try {
                 dato = RabbitMQ.recibir(canle, nomeColaSuscripcions);
                 while (dato != null) {
+                    debugPrint("Recibido mensaje de suscripción");
                     String[] aux = dato.split(" ");
                     canle.queueDeclare("cliente_" + aux[0], false, false, false, null);
                     clientes.put(aux[0], Integer.parseInt(aux[1]));
-                    debugPrint("Suscripción aceptada, hay "+clientes.size()+" clientes");
+                    debugPrint("Suscripción aceptada, hay " + clientes.size() + " clientes");
                     dato = RabbitMQ.recibir(canle, nomeColaSuscripcions);
                 }
-            } catch (Exception e) {
+            }catch(IOException e) {
                 System.err.println("Erro na recepción de mensaxes: " + e.getMessage());
-                throw new RuntimeException(e);
             }
         }, 0, 1, TimeUnit.SECONDS); // Ejecuta cada segundo
     }

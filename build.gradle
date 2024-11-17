@@ -17,16 +17,14 @@ ext {
   junitVersion = '5.9.2'
 }
 
-sourceCompatibility = '17'
-targetCompatibility = '17'
 
 tasks.withType(JavaCompile).configureEach {
   options.encoding = 'UTF-8'
 }
 
 application {
-  mainModule = 'com.example.comdisp4'
-  mainClass = 'com.example.comdisp4.HelloApplication'
+  mainModule = 'P4ComDis'
+  mainClass = 'P4ComDis.Cliente.Servidor'
 }
 
 javafx {

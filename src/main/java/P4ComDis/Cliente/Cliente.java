@@ -39,7 +39,8 @@ public class Cliente{
     public void rematar(){
         if(fio!=null){
             fio.sigho=false;
-        }modificarTempoSuscripcion(0);
+        }
+        modificarTempoSuscripcion(0);
     }
 
     public void modificarTempoSuscripcion(int tempo){

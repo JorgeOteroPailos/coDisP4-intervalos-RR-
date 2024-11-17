@@ -17,6 +17,8 @@ import javafx.stage.Stage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static P4ComDis.utils.Outros.debugPrint;
+
 public class Controlador extends Application {
     private XYChart.Series<Number, Number> series;
     private NumberAxis xAxis;
@@ -55,7 +57,13 @@ public class Controlador extends Application {
         Scene scene = new Scene(root, 800, 600);
         stage.setScene(scene);
         stage.setTitle("P4ComDis.Cliente con Gráfico");
-        stage.setOnCloseRequest(event -> executorService.shutdown());
+        stage.setOnCloseRequest(event -> {
+            if (cliente != null) {
+                cliente.rematar(); // Detener las operaciones del cliente
+            }
+            executorService.shutdown(); // Apagar el ejecutor
+            System.exit(0); // Terminar el programa
+        });
         stage.show();
     }
 
@@ -91,7 +99,7 @@ public class Controlador extends Application {
                     subscriptionTime = Integer.parseInt(subscriptionTimeField.getText()); // Actualizar la variable subscriptionTime
                     if (subscriptionTime <= 0) throw new NumberFormatException(); // Validar número positivo
                     cliente.modificarTempoSuscripcion(subscriptionTime); // Renovar suscripción
-                    System.out.println("Suscripción renovada por " + subscriptionTime + " segundos.");
+                    debugPrint("Suscripción renovada por " + subscriptionTime + " segundos.");
                 } catch (NumberFormatException ex) {
                     Popup.show("Error", "Debe ingresar un tiempo válido (número entero positivo)", Alert.AlertType.ERROR);
                 }
