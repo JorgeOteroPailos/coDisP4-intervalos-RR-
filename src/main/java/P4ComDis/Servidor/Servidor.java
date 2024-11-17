@@ -16,13 +16,11 @@ import static P4ComDis.utils.Outros.debugPrint;
 
 public class Servidor implements Runnable {
     private Channel canle;
-
-    private Integer TODO =0;
     private BufferedReader lectorArquivo;
     private HashMap<String, Integer> clientes;
     private String nomeColaSuscripcions;
 
-    private ScheduledExecutorService scheduler; // Cambiado de Timer a ScheduledExecutorService
+    private ScheduledExecutorService scheduler;
 
     public Servidor(String arquivo, String IP, String nomeColaSuscripcions) {
         try {
@@ -37,7 +35,7 @@ public class Servidor implements Runnable {
             canle = conexion.createChannel();
             canle.queueDeclare(nomeColaSuscripcions, false, false, false, null);
 
-            scheduler = Executors.newScheduledThreadPool(1); // Inicializamos el programador
+            scheduler = Executors.newScheduledThreadPool(1); // Inicializamos o programador
 
         } catch (Exception e) {
             System.err.println("Erro na inicialización do servidor: " + e.getMessage());
@@ -54,7 +52,7 @@ public class Servidor implements Runnable {
                 String clienteID = entry.getKey();
                 Integer tempoRestante = entry.getValue();
 
-                // Reducir el tiempo restante y comprobar si eliminarlo
+                // Reducir o tempo restante e comprobar se eliminalo
                 tempoRestante--;
                 clientes.replace(clienteID, tempoRestante);
                 if (tempoRestante < 0) {
@@ -68,8 +66,6 @@ public class Servidor implements Runnable {
                     continue;
                 }
                 try {
-                    dato=String.valueOf(Float.parseFloat(dato)+TODO);
-                    TODO++;
                     RabbitMQ.enviar(canle, "cliente_" + clienteID, dato);
                     debugPrint("Envío "+dato+" a "+clienteID);
                 } catch (Exception e) {
@@ -91,14 +87,14 @@ public class Servidor implements Runnable {
                 System.err.println("Erro na recepción de mensaxes: " + e.getMessage());
                 throw new RuntimeException(e);
             }
-        }, 0, 1, TimeUnit.SECONDS); // Ejecuta cada segundo
+        }, 0, 1, TimeUnit.SECONDS); // Executa cada segundo
     }
 
     private String leerDato() {
         try {
             return lectorArquivo.readLine();
         } catch (IOException e) {
-            System.err.println("Erro naa lectura dos datos: " + e.getMessage());
+            System.err.println("Erro na lectura dos datos: " + e.getMessage());
             return "0";
         }
     }
