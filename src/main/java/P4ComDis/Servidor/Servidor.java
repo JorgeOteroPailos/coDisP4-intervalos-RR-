@@ -58,7 +58,7 @@ public class Servidor implements Runnable {
                 if (tempoRestante < 0) {
                     iterator.remove();
                     try {
-                        canle.queueDelete(clienteID);
+                        canle.queueDelete("cliente_" + clienteID);
                         debugPrint("Cola eliminada. Quedan " + clientes.size() + " clientes.");
                     } catch (IOException e) {
                         System.err.println("Erro na eliminación da cola: " + e.getMessage());
