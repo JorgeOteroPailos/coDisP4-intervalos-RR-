@@ -31,7 +31,7 @@ public class Controlador extends Application {
     public void start(Stage stage) {
         // Crear gráfico
         xAxis = new NumberAxis(0, 60, 5);
-        xAxis.setLabel("Tiempo (s)");
+        xAxis.setLabel("Tempo (s)");
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Datos");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
@@ -54,10 +54,10 @@ public class Controlador extends Application {
         // Configurar escea
         Scene scene = new Scene(root, 800, 600);
         stage.setScene(scene);
-        stage.setTitle("P4ComDis.Cliente con Gráfico");
+        stage.setTitle("P4ComDis.Cliente con gráfico");
         stage.setOnCloseRequest(event -> {
             if (cliente != null) {
-                cliente.rematar(); // Deter las operacións do cliente
+                cliente.rematar(); // Deter as operacións do cliente
             }
             executorService.shutdown(); // Apagar o executor
             System.exit(0); // Terminar o programa
@@ -70,17 +70,15 @@ public class Controlador extends Application {
         serverField.setPromptText("Servidor");
         Button connectButton = new Button("Conectar");
 
-        TextField subscriptionTimeField = new TextField(String.valueOf(subscriptionTime)); // Usar la variable subscriptionTime
+        TextField subscriptionTimeField = new TextField(String.valueOf(subscriptionTime));
         subscriptionTimeField.setPromptText("Tempo de suscripción");
         Button renewButton = new Button("Renovar Suscripción");
 
         // Comportamento do botón "Conectar"
-        connectButton.setOnAction(e -> renovarOiniciarConexion(serverField,subscriptionTimeField));
+        connectButton.setOnAction(e -> renovarOiniciarConexion(serverField, subscriptionTimeField));
 
         // Comportamento do botón "Renovar Suscripción"
-        renewButton.setOnAction(e -> renovarOiniciarConexion(serverField,subscriptionTimeField));
-
-
+        renewButton.setOnAction(e -> renovarOiniciarConexion(serverField, subscriptionTimeField));
 
         // Layout para controis
         HBox controls = new HBox(10, new Label("Servidor:"), serverField, connectButton,
@@ -106,18 +104,20 @@ public class Controlador extends Application {
         });
     }
 
-    private void renovarOiniciarConexion(TextField serverField, TextField subscriptionTimeField){
+    private void renovarOiniciarConexion(TextField serverField, TextField subscriptionTimeField) {
         serverName = serverField.getText();
         if (cliente != null) {
             cliente.rematar();
         }
-        cliente = new Cliente(this, "colaSuscripcions", serverName); // Conectarse ao servidor
         try {
-            subscriptionTime = Integer.parseInt(subscriptionTimeField.getText()); // Gardar o tempo ingresado
-            if (subscriptionTime < 0) throw new NumberFormatException(); // Validar número positivo
+            subscriptionTime = Integer.parseInt(subscriptionTimeField.getText());
+            if (subscriptionTime < 0) throw new NumberFormatException();
+            cliente = new Cliente(this, "colaSuscripcions", serverName); // Conectarse ao servidor
             cliente.modificarTempoSuscripcion(); // Renovar suscripción
         } catch (NumberFormatException ex) {
             Popup.show("Erro", "Debe ingresar un tempo válido (número enteiro positivo)", Alert.AlertType.ERROR);
+        } catch (Exception e) {
+            Popup.show("Erro", "Erro ao conectar co servidor: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
