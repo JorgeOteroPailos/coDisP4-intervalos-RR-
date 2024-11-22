@@ -124,14 +124,14 @@ public class Servidor{
     }
 
     public static void main(String[] args) {
-        if (args.length != 3) {
-            System.out.println("Uso: java P4ComDis.Servidor.Servidor <arquivo> <IP> <nomeColaSuscripcions>");
+        if (args.length < 2) {
+            System.out.println("Uso: java P4ComDis.Servidor.Servidor <arquivo> <IP>");
             exit(1);
         }
 
         String arquivo = args[0];
         String IP = args[1];
-        String nomeColaSuscripcions = args[2];
+        String nomeColaSuscripcions = "colaSuscripcions";
 
         new Servidor(arquivo,IP,nomeColaSuscripcions).executar();
     }
