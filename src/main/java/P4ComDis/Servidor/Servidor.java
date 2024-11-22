@@ -1,10 +1,8 @@
 package P4ComDis.Servidor;
 
-import P4ComDis.utils.RabbitMQ;
 import com.rabbitmq.client.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -20,14 +18,25 @@ public class Servidor{
     private Channel canle;
     private BufferedReader lectorArquivo;
     private final Map<String, Integer> clientes = new HashMap<>();
-    private final String nomeColaSuscripcions;
     private ScheduledExecutorService scheduler;
 
-    public Servidor(String arquivo, String IP, String nomeColaSuscripcions) {
-        this.nomeColaSuscripcions = nomeColaSuscripcions;
+    public Servidor(String nomeArquivo, String IP, String nomeColaSuscripcions) {
         try {
-            lectorArquivo = new BufferedReader(new InputStreamReader(new URL(arquivo).openStream()));
-
+            lectorArquivo = new BufferedReader(new InputStreamReader(new URL(nomeArquivo).openStream()));
+        }catch (Exception e) {
+            System.err.println("Erro na apertura do arquivo online, intentando con arquivo local");
+            try {
+                InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.txt");
+                if (inputStream == null) {
+                    throw new FileNotFoundException("Arquivo local non atopado no classpath.");
+                }
+                lectorArquivo = new BufferedReader(new InputStreamReader(inputStream));
+            } catch (IOException e2) {
+                System.err.println("Erro ao cargar o arquivo local: " + e.getMessage());
+                exit(-1);
+            }
+        }
+        try{
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost(IP);
 
@@ -42,18 +51,9 @@ public class Servidor{
 
             scheduler = Executors.newScheduledThreadPool(1);
 
-        } catch (IOException | TimeoutException e) {
-            System.err.println("Erro na inicialización do servidor: " + e.getMessage());
-            exit(-1);
-        }
-    }
-
-    private void xestionarSuscripcions() {
-        try {
-            // Procesar novas solicitudes de suscripción
-            String dato = RabbitMQ.recibir(canle, nomeColaSuscripcions);
-            while (dato != null) {
-                String[] partes = dato.split(" ");
+            DeliverCallback callback = (consumerTag, delivery) -> {
+                String mensaxeRecibida = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                String[] partes = mensaxeRecibida.split(" ");
                 String clienteID = partes[0];
                 int tempo = Integer.parseInt(partes[1]);
 
@@ -66,33 +66,39 @@ public class Servidor{
                 // Engadir ou renovar cliente
                 clientes.put(clienteID, tempo);
                 debugPrint("Suscripción aceptada para " + clienteID + ", tempo: " + tempo);
-                dato = RabbitMQ.recibir(canle, nomeColaSuscripcions);
-            }
+            };
 
-            // Reducir o tempo restante dos clientes e eliminar os que expiraron
-            Iterator<Map.Entry<String, Integer>> iterador = clientes.entrySet().iterator();
-            while (iterador.hasNext()) {
-                Map.Entry<String, Integer> entrada = iterador.next();
-                String clienteID = entrada.getKey();
-                int tempoRestante = entrada.getValue() - 1;
+            canle.basicConsume(nomeColaSuscripcions, true, callback, consumerTag -> {});
 
-                if (tempoRestante < 0) {
-                    // Tempo expirado: eliminar a cola e o cliente
-                    String nomeColaCliente = "cliente_" + clienteID;
-                    try {
-                        canle.queueDelete(nomeColaCliente);
-                        debugPrint("Cola eliminada para cliente " + clienteID);
-                    } catch (IOException e) {
-                        System.err.println("Erro eliminando cola para " + clienteID + ": " + e.getMessage());
-                    }
-                    iterador.remove();
-                } else {
-                    // Actualizar o tempo restante
-                    entrada.setValue(tempoRestante);
+        } catch (IOException | TimeoutException e ) {
+            System.err.println("Erro na inicialización do servidor:" + e.getMessage());
+            exit(-1);
+        }
+    }
+
+
+    private void xestionarSuscripcions() {
+        // Reducir o tempo restante dos clientes e eliminar os que expiraron
+        Iterator<Map.Entry<String, Integer>> iterador = clientes.entrySet().iterator();
+        while (iterador.hasNext()) {
+            Map.Entry<String, Integer> entrada = iterador.next();
+            String clienteID = entrada.getKey();
+            int tempoRestante = entrada.getValue() - 1;
+
+            if (tempoRestante < 0) {
+                // Tempo expirado: eliminar a cola e o cliente
+                String nomeColaCliente = "cliente_" + clienteID;
+                try {
+                    canle.queueDelete(nomeColaCliente);
+                    debugPrint("Cola eliminada para cliente " + clienteID);
+                } catch (IOException e) {
+                    System.err.println("Erro eliminando cola para " + clienteID + ": " + e.getMessage());
                 }
+                iterador.remove();
+            } else {
+                // Actualizar o tempo restante
+                entrada.setValue(tempoRestante);
             }
-        } catch (Exception e) {
-            System.err.println("Erro na xestión das suscripcións: " + e.getMessage());
         }
     }
 
@@ -132,6 +138,8 @@ public class Servidor{
         String arquivo = args[0];
         String IP = args[1];
         String nomeColaSuscripcions = "colaSuscripcions";
+
+        debugPrint("Arquivo: "+args[0]+" IP: "+args[1]);
 
         new Servidor(arquivo,IP,nomeColaSuscripcions).executar();
     }

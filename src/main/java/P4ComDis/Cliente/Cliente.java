@@ -53,7 +53,7 @@ public class Cliente {
 
         } catch (Exception e) {
             System.err.println("Erro na inicialización do cliente: " + e.getMessage());
-            canle = null; // Evitar estado inconsistente
+            System.exit(-1);
         }
     }
 
